@@ -1,6 +1,8 @@
 ### SymPress
 
-![SymPress banner](./header.png)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/SymPress/.github/main/profile/header.png" alt="SymPress banner" width="100%">
+</p>
 
 SymPress brings Symfony architecture into professional WordPress projects
 without hiding WordPress or replacing its runtime. WordPress stays the CMS,
