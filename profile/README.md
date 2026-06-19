@@ -80,6 +80,17 @@ service wiring and integration conventions. SymPress gives those packages a
 shared runtime contract while keeping WordPress hooks and APIs visible at the
 edges.
 
+## Version Baseline
+
+Runtime packages, the starter and the demo target PHP 8.5 for the first public
+release train. Composer-managed WordPress installs currently track the
+WordPress line provided by the starter and demo dependencies.
+
+`sympress/coding-standards` may support a broader PHP runtime because it is a
+development tool and its enterprise profiles define the inspected project
+target separately. That lets teams lint conservative migrations while the
+runtime packages continue to move together.
+
 ## What SymPress Builds
 
 - A Symfony-powered application layer for WordPress websites, plugins, MU
