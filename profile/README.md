@@ -16,6 +16,70 @@ The project is in active pre-release development. Public repositories are being
 prepared for stable Composer releases, clearer documentation, Packagist
 publishing, and a repeatable demo/start-project workflow.
 
+## Start Here
+
+The fastest way to understand SymPress is to start with the visible entry
+points, not the infrastructure packages:
+
+- [`sympress/demo`](https://github.com/SymPress/demo) shows a complete
+  Composer-based WordPress site with admin UI, blocks, REST, migrations,
+  logging, ORM usage, assets and profiler integration.
+- [`sympress/starter`](https://github.com/SymPress/starter) is the DDEV-ready
+  project template for new SymPress websites.
+- [`sympress/cli`](https://github.com/SymPress/cli) creates configured starter
+  projects and writes project metadata for later updates.
+
+## Try It In 2 Minutes
+
+Prerequisites: PHP 8.5, Composer 2, Docker and DDEV.
+
+Until the stable CLI package is available from Packagist, install it directly
+from GitHub:
+
+```bash
+composer global config repositories.sympress-cli vcs https://github.com/SymPress/cli
+composer global require sympress/cli:dev-main
+sympress new my-site --manifest=https://github.com/SymPress/starter
+cd my-site
+bin/console setup my-site
+ddev launch
+```
+
+You can also inspect the demo directly:
+
+```bash
+git clone https://github.com/SymPress/demo.git sympress-demo
+cd sympress-demo
+cp .env.example .env
+ddev start
+ddev composer install
+ddev launch
+```
+
+## Visual Proof
+
+The demo repository includes current screenshots of the frontend, admin
+dashboard and profiler panel.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/SymPress/demo/main/docs/images/admin-dashboard.png" alt="SymPress demo admin dashboard" width="49%">
+  <img src="https://raw.githubusercontent.com/SymPress/demo/main/docs/images/profiler-sympress-demo.png" alt="SymPress profiler panel" width="49%">
+</p>
+
+## How Is This Different?
+
+SymPress is not a Bedrock replacement. Bedrock is excellent at defining a
+Composer-based WordPress project layout. SymPress focuses on the application
+layer inside that layout: a site kernel, service container, package discovery,
+bundles, hooks, routes, migrations, console tooling and testable service
+boundaries.
+
+SymPress is also not just a plain Composer plugin. A Composer plugin can ship
+code into WordPress, but each package still has to invent its own bootstrapping,
+service wiring and integration conventions. SymPress gives those packages a
+shared runtime contract while keeping WordPress hooks and APIs visible at the
+edges.
+
 ## What SymPress Builds
 
 - A Symfony-powered application layer for WordPress websites, plugins, MU
