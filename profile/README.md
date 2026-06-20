@@ -104,6 +104,9 @@ runtime packages continue to move together.
 
 The product roadmap is moving in four tracks:
 
+Follow the live public board here: [SymPress Roadmap](https://github.com/orgs/SymPress/projects/1).
+
+
 1. Stabilize the foundation packages.
 2. Make project creation and local development fast enough to try in minutes.
 3. Build a realistic demo that explains the architecture in context.
