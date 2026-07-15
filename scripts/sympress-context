@@ -1,0 +1,225 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage() {
+    cat <<'EOF'
+Usage: sympress-context [--repo OWNER/REPO] [--json] [--include-private]
+
+Print the Composer package, reverse dependencies, and repository-declared checks.
+Private repositories are excluded unless --include-private is passed explicitly.
+The command is read-only and never executes the suggested checks.
+EOF
+}
+
+summarize() {
+    local repository=$1
+
+    jq --arg repository "$repository" '
+        def fast_checks($scripts):
+            [
+                if $scripts.cs != null then "composer cs" else empty end,
+                if $scripts["static-analysis"] != null then "composer static-analysis" else empty end,
+                if $scripts.test != null then "composer test"
+                elif $scripts.tests != null then "composer tests"
+                else empty end
+            ];
+        def full_checks($scripts):
+            if $scripts.qa != null then ["composer qa"] else fast_checks($scripts) end;
+        . as $inventory
+        | first(
+            $inventory[]
+            | select((.repository | ascii_downcase) == ($repository | ascii_downcase))
+          ) as $target
+        | ($target.package // error("Target repository has no Composer package.")) as $package
+        | [
+            $inventory[]
+            | select(.require[$package] != null)
+            | .repository
+          ] | sort as $runtime_consumers
+        | [
+            $inventory[]
+            | select(.require_dev[$package] != null)
+            | .repository
+          ] | sort as $dev_consumers
+        | {
+            repository: $target.repository,
+            package: $package,
+            runtime_consumers: $runtime_consumers,
+            dev_consumers: $dev_consumers,
+            risk_surfaces: [
+                if $runtime_consumers != [] then "runtime_dependency_contract" else empty end,
+                if $dev_consumers != [] then "development_tooling_contract" else empty end,
+                if $target.type == "composer-plugin" then "composer_plugin_execution" else empty end,
+                if any($target.scripts | keys[]; test("^(pre|post)-")) then "composer_lifecycle_scripts" else empty end,
+                if $target.extra.sympress != null or $target.extra.kernel != null then
+                    "sympress_metadata_contract"
+                else empty end
+            ],
+            fast_checks: fast_checks($target.scripts),
+            full_checks: full_checks($target.scripts),
+            impact_verification: (
+                [{
+                    repository: $target.repository,
+                    relationship: "target",
+                    checks: full_checks($target.scripts)
+                }]
+                + [
+                    $inventory[]
+                    | select(.require[$package] != null)
+                    | {
+                        repository,
+                        relationship: "runtime_consumer",
+                        checks: full_checks(.scripts)
+                    }
+                ]
+                + [
+                    $inventory[]
+                    | select(.require_dev[$package] != null)
+                    | {
+                        repository,
+                        relationship: "dev_consumer",
+                        checks: full_checks(.scripts)
+                    }
+                ]
+                | sort_by(.relationship, .repository)
+            )
+          }
+    '
+}
+
+self_test() {
+    local result
+    result=$(summarize 'SymPress/kernel' <<'EOF'
+[
+  {"repository":"SymPress/kernel","package":"sympress/kernel","type":"library","require":{},"require_dev":{},"scripts":{"cs":"phpcs","static-analysis":"phpstan","tests":"phpunit","qa":["@cs","@static-analysis","@tests"]},"extra":{"sympress":{"bundles":[]}}},
+  {"repository":"SymPress/app","package":"sympress/app","type":"project","require":{"sympress/kernel":"^1"},"require_dev":{},"scripts":{"qa":"phpunit"},"extra":{}},
+  {"repository":"SymPress/tool","package":"sympress/tool","type":"library","require":{},"require_dev":{"sympress/kernel":"^1"},"scripts":{"tests":"phpunit"},"extra":{}}
+]
+EOF
+)
+
+    jq -e '
+        .package == "sympress/kernel"
+        and .runtime_consumers == ["SymPress/app"]
+        and .dev_consumers == ["SymPress/tool"]
+        and .risk_surfaces == ["runtime_dependency_contract", "development_tooling_contract", "sympress_metadata_contract"]
+        and .fast_checks == ["composer cs", "composer static-analysis", "composer tests"]
+        and .full_checks == ["composer qa"]
+        and (.impact_verification | length) == 3
+    ' >/dev/null <<<"$result"
+    echo 'sympress-context self-test passed.'
+}
+
+repository=''
+include_private=false
+json=false
+self_test_requested=false
+
+while (($#)); do
+    case "$1" in
+        --repo)
+            repository=${2:?--repo requires OWNER/REPO}
+            shift 2
+            ;;
+        --include-private)
+            include_private=true
+            shift
+            ;;
+        --json)
+            json=true
+            shift
+            ;;
+        --self-test)
+            self_test_requested=true
+            shift
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            usage >&2
+            exit 2
+            ;;
+    esac
+done
+
+command -v jq >/dev/null || { echo 'jq is required.' >&2; exit 1; }
+
+if $self_test_requested; then
+    self_test
+    exit
+fi
+
+command -v gh >/dev/null || { echo 'gh is required.' >&2; exit 1; }
+gh auth status >/dev/null 2>&1 || { echo 'gh authentication is required.' >&2; exit 1; }
+
+if [[ -n "$repository" ]]; then
+    repository=$(gh repo view "$repository" --json nameWithOwner --jq .nameWithOwner)
+else
+    repository=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
+fi
+
+visibility=$(gh repo view "$repository" --json visibility --jq .visibility)
+if [[ "$visibility" != PUBLIC && "$include_private" != true ]]; then
+    echo 'Private targets require explicit --include-private.' >&2
+    exit 2
+fi
+
+list_args=(SymPress --limit 100 --json nameWithOwner)
+if [[ "$include_private" != true ]]; then
+    list_args+=(--visibility public)
+else
+    echo 'Warning: private repository metadata will enter the current terminal/agent context.' >&2
+fi
+
+inventory=$(mktemp)
+trap 'rm -f "$inventory"' EXIT
+
+while IFS= read -r candidate; do
+    if ! composer=$(gh api -H 'Accept: application/vnd.github.raw+json' \
+        "repos/${candidate}/contents/composer.json" 2>/dev/null); then
+        continue
+    fi
+
+    jq -cn \
+        --arg repository "$candidate" \
+        --argjson composer "$composer" \
+        '{
+            repository: $repository,
+            package: ($composer.name // null),
+            type: ($composer.type // "library"),
+            require: ($composer.require // {}),
+            require_dev: ($composer["require-dev"] // {}),
+            scripts: ($composer.scripts // {}),
+            extra: ($composer.extra // {})
+        }' >>"$inventory"
+done < <(gh repo list "${list_args[@]}" --jq '.[].nameWithOwner')
+
+result=$(jq -s . "$inventory" | summarize "$repository")
+
+if $json; then
+    jq . <<<"$result"
+else
+    jq -r '
+        "Repository: \(.repository)\n"
+        + "Package: \(.package)\n"
+        + "Runtime consumers:\n"
+        + (if .runtime_consumers == [] then "  (none)\n" else (.runtime_consumers | map("  - " + .) | join("\n")) + "\n" end)
+        + "Dev consumers:\n"
+        + (if .dev_consumers == [] then "  (none)\n" else (.dev_consumers | map("  - " + .) | join("\n")) + "\n" end)
+        + "Risk surfaces:\n"
+        + (if .risk_surfaces == [] then "  (none derived)\n" else (.risk_surfaces | map("  - " + .) | join("\n")) + "\n" end)
+        + "Fast checks:\n"
+        + (if .fast_checks == [] then "  (none declared)\n" else (.fast_checks | map("  - " + .) | join("\n")) + "\n" end)
+        + "Full checks:\n"
+        + (if .full_checks == [] then "  (none declared)\n" else (.full_checks | map("  - " + .) | join("\n")) + "\n" end)
+        + "Impact verification:\n"
+        + (.impact_verification | map(
+            "  - \(.repository) [\(.relationship)]: "
+            + (if .checks == [] then "no declared check" else (.checks | join(", ")) end)
+          ) | join("\n"))
+    ' <<<"$result"
+fi

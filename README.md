@@ -20,12 +20,27 @@ SymPress is a project that implements Symfony components and architecture patter
 - [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) - community behavior expectations.
 - [CONTRIBUTING.md](CONTRIBUTING.md) - contribution workflow and project principles.
 - [SECURITY.md](SECURITY.md) - vulnerability reporting guidance.
+- [scripts/sympress-context](scripts/sympress-context) - read-only Composer dependency context for maintainers and coding agents.
 
 ## Usage
 
 Use this repository as the special `.github` repository for the SymPress organization or project account. GitHub will use these files as defaults for repositories that do not define their own local versions.
 
 Project repositories can override any file locally when they need package-specific behavior.
+
+## Repository context helper
+
+Authenticated maintainers can inspect the package represented by a repository,
+its reverse dependencies, derived Composer risk surfaces, fast/full checks, and
+a consumer verification list without executing repository code:
+
+```bash
+./scripts/sympress-context --repo SymPress/kernel
+```
+
+The helper scans public repositories by default. Private repository metadata is
+included only when `--include-private` is passed explicitly. Use `--json` for
+machine-readable output.
 
 ## License
 

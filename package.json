@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "name": "@sympress/organization-profile",
+  "license": "MIT",
+  "scripts": {
+    "lint:docs": "markdownlint-cli2 '**/*.md'"
+  },
+  "devDependencies": {
+    "markdownlint-cli2": "^0.23.0"
+  }
+}
