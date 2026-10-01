@@ -28,6 +28,11 @@ need.
 - Reusable Composer packages you adopt one at a time, not all at once
 - Reference tooling for local setup, quality checks, CI, and demos
 
+[`sympress/runtime`](https://github.com/SymPress/runtime) handles Composer project
+setup and environment diagnostics; [`sympress/qa`](https://github.com/SymPress/qa)
+provides shared PHP quality commands. The [package map](docs/packages.md) includes
+release status for packages still in development.
+
 Not sure if this is for you? See [Where SymPress Fits](docs/where-sympress-fits.md)
 compared to Bedrock, Sage, and plain Composer-managed WordPress.
 

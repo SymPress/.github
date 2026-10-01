@@ -38,13 +38,15 @@ The kernel now centers on:
 
 ## Near-Term Work
 
-- finish the first foundation release train
+- keep the foundation release train installable with stable package dependencies
 - publish and auto-update packages on Packagist
 - align README, changelog, security, and contribution files across
   repositories
 - document supported PHP, WordPress, and Symfony versions
 - keep the demo project installable from public packages
 - improve the CLI and starter flow for first project creation
+- use shared QA commands and disposable database integration checks as release gates
+- stabilize Nginx cache orchestration before its first tagged release
 
 ## Longer-Term Work
 

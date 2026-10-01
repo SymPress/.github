@@ -9,6 +9,7 @@ These packages define the runtime shape and release train.
 
 | Repository | Role |
 | --- | --- |
+| [`sympress/runtime`](https://github.com/SymPress/runtime) | Composer project setup, generated WordPress configuration, and environment diagnostics. |
 | [`sympress/kernel`](https://github.com/SymPress/kernel) | Site kernel, shared service container, bundle discovery, hooks, routes, config, and console integration. |
 | [`sympress/framework-bundle`](https://github.com/SymPress/framework-bundle) | Symfony FrameworkBundle bridge, framework services, cache pools, and WordPress object-cache support. |
 | [`sympress/assets`](https://github.com/SymPress/assets) | Structured script, style, module, manifest, and asset registration for WordPress packages. |
@@ -23,6 +24,7 @@ These packages make SymPress useful for real application code.
 | --- | --- |
 | [`sympress/twig-bundle`](https://github.com/SymPress/twig-bundle) | Twig integration with Symfony TwigBundle compatibility, template discovery, extensions, and globals. |
 | [`sympress/orm`](https://github.com/SymPress/orm) | Doctrine-inspired ORM primitives for WordPress projects that keep `wpdb` as the database runtime. |
+| [`sympress/nginx-cache`](https://github.com/SymPress/nginx-cache) | Nginx page-cache configuration and purge orchestration; currently in development without a tagged release. |
 
 ## Developer Experience
 
@@ -40,6 +42,7 @@ projects.
 | [`sympress/monolog-bundle`](https://github.com/SymPress/monolog-bundle) | Monolog integration for structured WordPress application logging. |
 | [`sympress/profiler`](https://github.com/SymPress/profiler) | Development profiler and web debug toolbar for WordPress requests. |
 | [`sympress/coding-standards`](https://github.com/SymPress/coding-standards) | PHP coding standards for scalable WordPress and Symfony-inspired development. |
+| [`sympress/qa`](https://github.com/SymPress/qa) | Shared PHP quality commands and configuration for coding standards, static analysis, and tests. |
 | [`SymPress/workflows`](https://github.com/SymPress/workflows) | Shared GitHub Actions workflows for Composer, WordPress, Playwright, releases, deployments, and secure artifacts. |
 
 ## Business Building Blocks
