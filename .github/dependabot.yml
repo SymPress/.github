@@ -4,6 +4,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
   - package-ecosystem: github-actions
     directory: /
@@ -12,4 +14,6 @@ updates:
       day: monday
       time: '06:30'
       timezone: Europe/Berlin
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
