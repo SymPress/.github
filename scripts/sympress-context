@@ -190,6 +190,11 @@ while IFS= read -r candidate; do
         continue
     fi
 
+    if ! jq -e 'type == "object"' >/dev/null 2>&1 <<<"$composer"; then
+        echo "Warning: skipping ${candidate}: composer.json is not a valid JSON object." >&2
+        continue
+    fi
+
     jq -cn \
         --arg repository "$candidate" \
         --argjson composer "$composer" \
