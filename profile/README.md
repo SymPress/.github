@@ -22,6 +22,16 @@ need.
 | 🚀 **Start a project** | [`sympress/cli`](https://github.com/SymPress/cli) + [`sympress/starter`](https://github.com/SymPress/starter) — a DDEV-ready Composer template |
 | 🧱 **The foundation** | [`sympress/kernel`](https://github.com/SymPress/kernel) — the application kernel and DI container everything else builds on |
 
+## See It Running
+
+The [demo site](https://github.com/SymPress/demo) renders a dynamic block
+through SymPress services, shows its components in the WordPress admin and
+adds its own panel to the development profiler.
+
+[![Admin dashboard of the SymPress demo](https://raw.githubusercontent.com/SymPress/demo/main/docs/images/admin-dashboard.png)](https://github.com/SymPress/demo)
+
+[![SymPress demo panel in the profiler](https://raw.githubusercontent.com/SymPress/demo/main/docs/images/profiler-sympress-demo.png)](https://github.com/SymPress/demo)
+
 ## What SymPress Builds
 
 - A Symfony-powered application layer for WordPress sites, plugins, and themes
