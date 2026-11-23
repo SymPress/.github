@@ -27,9 +27,10 @@ summarize() {
         def full_checks($scripts):
             if $scripts.qa != null then ["composer qa"] else fast_checks($scripts) end;
         . as $inventory
-        | first(
-            $inventory[]
-            | select((.repository | ascii_downcase) == ($repository | ascii_downcase))
+        # map + .[0] yields null when nothing matches, so the error below fires; first(empty) would stop silently.
+        | (
+            map(select((.repository | ascii_downcase) == ($repository | ascii_downcase)))
+            | .[0]
           ) as $target
         | ($target.package // error("Target repository has no Composer package.")) as $package
         | [
@@ -108,6 +109,11 @@ EOF
         and .full_checks == ["composer qa"]
         and (.impact_verification | length) == 3
     ' >/dev/null <<<"$result"
+
+    if summarize 'SymPress/.github' <<<'[{"repository":"SymPress/kernel","package":"sympress/kernel"}]' >/dev/null 2>&1; then
+        echo 'Self-test failed: a target without a Composer package must be an error.' >&2
+        return 1
+    fi
     echo 'sympress-context self-test passed.'
 }
 
